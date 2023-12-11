@@ -2,6 +2,7 @@ version: '3.7'
 # ====================================== AIRFLOW ENVIRONMENT VARIABLES =======================================
 x-environment: &airflow_environment
   # Airflow settings.
+  - AIRFLOW_HOME=/opt/airflow
   - AIRFLOW__CORE__EXECUTOR=LocalExecutor
   - AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS=False
   - AIRFLOW__CORE__LOAD_EXAMPLES=False
@@ -14,20 +15,25 @@ x-environment: &airflow_environment
   - AIRFLOW_CONN_MOVIELENS=http://airflow:airflow@movielens
   - MOVIELENS_USER=airflow
   - MOVIELENS_PASSWORD=airflow
-x-airflow-image: &airflow_image apache/airflow:2.0.0-python3.8
+x-airflow-image: &airflow_image apache/airflow:2.7.3-python3.8
 # ====================================== /AIRFLOW ENVIRONMENT VARIABLES ======================================
 services:
   postgres:
-    image: postgres:12-alpine
+    image: postgres:latest  #:9.5-alpine
+    restart: always
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
+    #  PGDATA: /var/lib/postgresql/data/pgdata
+    #command: postgres=# ALTER ROLE airflow SET search_path TO airflow,public;
     ports:
       - "5432:5432"
+    #volumes:
+    #  - .dbdata:/var/lib/postgresql/data
   init:
     build:
-      context: ./chapters/files/docker/airflow-data
+      context: ./chapters/scheduling/docker/airflow-data
       args:
         AIRFLOW_BASE_IMAGE: *airflow_image
     image: manning-airflow/airflow-data
@@ -35,10 +41,10 @@ services:
       - postgres
     environment: *airflow_environment
     entrypoint: /bin/bash
-    command: -c 'airflow db upgrade ** sleep 5 && airflow users create --username admin --password admin --firstname Anonymous --lastname Admin --role Admin --email admin@example.org'
+    command: -c 'airflow db init && sleep 5 && airflow users create --username admin --password admin --firstname Anonymous --lastname Admin --role Admin --email admin@example.org'
   webserver:
     build:
-      context: ./chapters/files/docker/airflow-data
+      context: ./chapters/scheduling/docker/airflow-data
       args:
         AIRFLOW_BASE_IMAGE: *airflow_image
     image: manning-airflow/airflow-data
@@ -53,7 +59,7 @@ services:
     command: webserver
   scheduler:
     build:
-      context: ./chapters/files/docker/airflow-data
+      context: ./chapters/scheduling/docker/airflow-data
       args:
         AIRFLOW_BASE_IMAGE: *airflow_image
     image: manning-airflow/airflow-data

@@ -73,71 +73,71 @@ class MovielensHook(BaseHook):
         self._session=None
         self._base_url=None
 
-        # API methods
+    # API methods
 
-        def get_movices(self):
-            """
-            Fetches a list of movies.
-            :param self:
-            :return:
-            """
+    def get_movices(self):
+        """
+        Fetches a list of movies.
+        :param self:
+        :return:
+        """
 
-            raise NotImplementedError()
+        raise NotImplementedError()
 
-        def get_users(self):
-            """
-            Fetches a list of users.
-            :param self:
-            :return:
-            """
+    def get_users(self):
+        """
+        Fetches a list of users.
+        :param self:
+        :return:
+        """
 
-            raise NotImplementedError()
+        raise NotImplementedError()
 
-        def get_ratings(self, start_date=None, end_date=None, batch_size=100):
-            """
-            Fetches rating between the given start/ end dates.
-            :param self:
-            :param start_date: str
-                Start date to start fetching ratings from (inclusive). Expected
-                format is YYYY-MM-DD (equal to Airflow's ds formats).
-            :param end_date: str
-                End date to fetching ratings up to (exclusive). Expected format
-                is YYYY-MM-DD (equal to Airflow's ds formats).
-            :param batch_size: int
-                Size of the batches (pages) to fetch from the API. Larger values
-                mean less requests, but more data transfered per request.
-            :return:
-            """
+    def get_ratings(self, start_date=None, end_date=None, batch_size=100):
+        """
+        Fetches rating between the given start/ end dates.
+        :param self:
+        :param start_date: str
+            Start date to start fetching ratings from (inclusive). Expected
+            format is YYYY-MM-DD (equal to Airflow's ds formats).
+        :param end_date: str
+            End date to fetching ratings up to (exclusive). Expected format
+            is YYYY-MM-DD (equal to Airflow's ds formats).
+        :param batch_size: int
+            Size of the batches (pages) to fetch from the API. Larger values
+            mean less requests, but more data transfered per request.
+        :return:
+        """
 
-            yield from self._get_with_pagination(
-                endpoint="/ratings",
-                params={"start_date": start_date, "end_date": end_date},
-                batch_size=batch_size,
+        yield from self._get_with_pagination(
+            endpoint="/ratings",
+            params={"start_date": start_date, "end_date": end_date},
+            batch_size=batch_size,
+        )
+
+    def _get_with_pagination(self, endpoint, params, batch_size=100):
+        """
+
+        :param self:
+        :param endpoint:
+        :param params:
+        :param batch_size:
+        :return:
+        """
+
+        session, base_url = self.get_conn()
+        url = base_url +endpoint
+
+        offset = 0
+        total = None
+        while total is None or offset < total:
+            response = session.get(
+                url, params={**params, **{"offset": offset, "limit": batch_size}}
             )
+            response.raise_for_status()
+            response_json = response.json()
 
-        def _get_with_pagination(self, endpoint, params, batch_size=100):
-            """
+            yield from response_json["result"]
 
-            :param self:
-            :param endpoint:
-            :param params:
-            :param batch_size:
-            :return:
-            """
-
-            session, base_url = self.get_conn()
-            url = base_url +endpoint
-
-            offset = 0
-            total = None
-            while total is None or offset < total:
-                response = session.get(
-                    url, params={**params, **{"offset": offset, "limit": batch_size}}
-                )
-                response.raise_for_status()
-                response_json = response.json()
-
-                yield from response_json["result"]
-
-                offset += batch_size
-                total = response_json["total"]
+            offset += batch_size
+            total = response_json["total"]

@@ -23,7 +23,7 @@ def _read_ratings(file_path):
 
 
 app = Flask(__name__)
-app.config["ratings"] = _read_ratings("./ratings.csv")
+app.config["ratings"] = _read_ratings("/ratings.csv")
 
 auth = HTTPBasicAuth()
 users = {os.environ["API_USER"]: generate_password_hash(os.environ["API_PASSWORD"])}
