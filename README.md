@@ -27,3 +27,7 @@ And DTAP environments:
 2) Test
 3) Acceptance
 4) Production
+
+## Note:
+1. npx kill-port 8080
+3. apache-airflow-providers-postgres==2.0.0
