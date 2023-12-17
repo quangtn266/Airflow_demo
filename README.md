@@ -20,3 +20,5 @@ In Airflow, there are 4 kinds of executor:
 2. Local Executor
 3. Celery Executor
 4. Kuebernestes Executor
+
+![Screen Shot 2023-12-17 at 19 58 47](https://github.com/quangtn266/Airflow_demo/assets/50879191/5b91cabc-5d06-43bd-8f7e-1cb0320fca4c)
